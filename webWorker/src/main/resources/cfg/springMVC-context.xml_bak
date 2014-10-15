@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc
+	http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+	http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+	http://www.springframework.org/schema/context 
+	http://www.springframework.org/schema/context/spring-context-4.0.xsd
+	 http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<!-- <mvc:default-servlet-handler/> -->
+	<mvc:resources location="/common/" mapping="/common/**" />
+	<mvc:default-servlet-handler />
+	<mvc:annotation-driven />
+	<context:component-scan base-package="com.dais.controller" />
+
+	<!-- 会话Cookie模板 -->
+	<bean id="sessionIdCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+		<constructor-arg value="sid" />
+		<property name="httpOnly" value="true" />
+		<property name="maxAge" value="-1" />
+	</bean>
+	<bean id="rememberMeCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+		<constructor-arg value="rememberMe" />
+		<property name="httpOnly" value="true" />
+		<property name="maxAge" value="2592000" /><!-- 30天 -->
+	</bean>
+	<!-- rememberMe管理器 -->
+	<bean id="rememberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">
+		<property name="cipherKey"
+			value=" #{T(org.apache.shiro.codec.Base64).decode('4AvVhmFLUs0KTA3Kprsdag==')}" />
+		<property name="cookie" ref="rememberMeCookie" />
+	</bean>
+	<bean id="formAuthenticationFilter"
+		class="org.apache.shiro.web.filter.authc.FormAuthenticationFilter">
+		<property name="rememberMeParam" value="rememberMe" />
+	</bean>
+	<!-- end cookie -->
+
+	<!-- 图形解析器。 -->
+	<!-- <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+		<property name="mediaTypes">
+			<map>
+				<entry key="atom" value="application/atom+xml" />
+				<entry key="html" value="text/html" />
+				<entry key="json" value="application/json" />
+			</map>
+		</property>
+		<property name="viewResolvers">
+			<list>
+				<bean class="org.springframework.web.servlet.view.BeanNameViewResolver" />
+				<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+					<property name="prefix" value="/WEB-INF/jsp/" />
+					<property name="suffix" value=".jsp" />
+				</bean>
+			</list>
+		</property>
+		<property name="defaultViews">
+			<list>
+				<bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView" >
+				    <property name="objectMapper">
+         				<bean class="com.dais.expand.jackson.HibernateAwareObjectMapper" />
+               		</property>
+               		<property name="contentType" value="text/HTML;charset=UTF-8"/>
+				</bean>
+			</list>
+		</property>
+	</bean> -->
+	
+	<!-- freemarker的配置 -->
+	<bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+		<property name="defaultContentType" value="application/json" />
+		<property name="mediaTypes">
+			<map>
+				<entry key="html" value="text/html" />
+				<entry key="json" value="application/json" />
+				<entry key="xml" value="application/xml" />
+			</map>
+		</property>
+		<property name="viewResolvers">
+			<list>
+				<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+					<property name="viewClass" value="org.springframework.web.servlet.view.JstlView" />
+					<property name="prefix" value="/WEB-INF/jsp/" />
+					<property name="suffix" value=".jsp" />
+				</bean>
+				<bean class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+					<property name="cache" value="true" />
+					<property name="prefix" value="" /> 
+					<property name="suffix" value=".ftl" />
+					<property name="exposeSpringMacroHelpers" value="true" />
+				</bean>
+
+				
+				<!-- 可加入其他视图技术如 volacity jstl等 -->
+			</list>
+		</property>
+		<property name="defaultViews">
+			<list>
+				<!-- 输出为JSON数据 -->
+				<bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView">
+				</bean>
+				<!-- 输出为xml数据 -->
+				<bean id="marshallingView" class="org.springframework.web.servlet.view.xml.MarshallingView">
+					<property name="marshaller">
+						<bean id="xStreamMarshaller" class="org.springframework.oxm.xstream.XStreamMarshaller">
+							<property name="autodetectAnnotations" value="true" />
+						</bean>
+					</property>
+					<property name="contentType" value="application/xml" />
+				</bean>
+			</list>
+		</property>
+	</bean>
+	<bean id="freemarkerConfig" class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+		<property name="templateLoaderPath" value="/WEB-INF/ftls/" />  
+        <property name="defaultEncoding" value="GBK" />  
+		<property name="freemarkerSettings">
+			<props>
+				<prop key="locale">zh_CH</prop>
+				<prop key="number_format">0.####</prop>
+			</props>
+		</property>
+	</bean>
+	<bean id="exceptionResolver"
+		class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<property name="defaultErrorView" value="/commons/error" />
+		<property name="exceptionMappings">
+			<props>
+			</props>
+		</property>
+	</bean>
+
+
+	<aop:config proxy-target-class="true"></aop:config>
+	<bean
+		class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+		<property name="securityManager" ref="securityManager" />
+	</bean>
+	<!-- <mvc:annotation-driven> <mvc:argument-resolvers> <bean class="com.github.zhangkaitao.shiro.chapter16.web.bind.method.CurrentUserMethodArgumentResolver"/> 
+		</mvc:argument-resolvers> </mvc:annotation-driven> -->
+	<!-- <mvc:resources location="/common/" mapping="/common/**"/> -->
+</beans>
