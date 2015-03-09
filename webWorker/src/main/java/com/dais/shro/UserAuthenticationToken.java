@@ -8,6 +8,7 @@ public class UserAuthenticationToken implements AuthenticationToken {
 	 */
 	private static final long serialVersionUID = 1481659133908012788L;
 
+	
 
 	public Object getCredentials() {
 		return null;

@@ -27,5 +27,7 @@ public class TestHibernate {
 	@Test
 	public void TestCofig(){
 		log.info("teste");
+		log.info("xxx");
+		
 	}
 }
